@@ -12,7 +12,7 @@ public class Loader {
         }
     }
     
-    // Load from List<String> (for use with Compiler output)
+    // Load from List<String>
     public static void loadProgramFromStrings(Memory memory, List<String> program) {
         int i = 0;
         for (String instruction : program) {
@@ -20,7 +20,7 @@ public class Loader {
         }
     }
     
-    // Load from machine code file (handles comments and gets start address)
+    // Load from machine code file
     public static int loadProgramFromFile(Memory memory, String filename) {
         int startAddress = 0;
         boolean foundInstructions = false;
@@ -32,22 +32,18 @@ public class Loader {
             while ((line = reader.readLine()) != null) {
                 String trimmed = line.trim();
                 
-                // Skip empty lines
                 if (trimmed.isEmpty())
                     continue;
                 
-                // Check for instruction start marker
                 if (trimmed.startsWith("// Instructions")) {
                     foundInstructions = true;
                     startAddress = address;
                     continue;
                 }
                 
-                // Skip comment lines
                 if (trimmed.startsWith("//"))
                     continue;
                 
-                // Remove inline comments and extract instruction
                 String instruction = trimmed.split("//")[0].trim();
                 
                 if (!instruction.isEmpty()) {
