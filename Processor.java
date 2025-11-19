@@ -8,9 +8,13 @@ public class Processor {
    private Memory memory; 
    
    public Processor(Memory mem) {
+      this(mem, 0); // Default to starting at address 0
+   }
+   
+   public Processor(Memory mem, int startAddress) {
       this.memory = mem;
       this.accumulator = "0000";
-      this.counter = 0;
+      this.counter = startAddress;
       this.scan = new Scanner(System.in);
       this.res = new StringBuilder();
    }
