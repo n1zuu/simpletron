@@ -1,54 +1,63 @@
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.util.Scanner;
+import java.util.*;
+import java.io.*;
 
 public class Loader {
-    public Memory mem;
-    public Processor pro;
 
-    public Loader(String filename, String showMode) {
-        mem = new Memory(100);
-        loadFile(filename);
-
-        pro = new Processor(mem);
-        if (showMode.equals("-s"))
-            pro.dumpStep();
-        else if (showMode.equals("-d"))
-            pro.dumpDirect();
-        else {
-            System.out.println("INVALID DISPLAY MODE. TERMINATING PROGRAM...");
-            System.exit(1);
-        }    
-    }
-
-    public void loadFile(String filename) {
-        File file = new File(filename);
-        try (Scanner scan = new Scanner(file)) { 
-            while (scan.hasNextLine()) {
-                String line = scan.nextLine();
-                if (!line.isEmpty() && !line.startsWith(";")) {
-                    String[] tokens = line.trim().split("\\s+");
-                    if (tokens.length >= 2) {
-                        int index = Integer.parseInt(tokens[0]);
-                        String value = tokens[1];
-                        mem.addItem(index, value);
-                    }
-                }
-            }
-        } catch (FileNotFoundException e) {
-            System.err.println("Error: File not found: " + filename); 
-        } catch (Exception e) {
-            System.out.println("An error occurred: " + e.getMessage());
+    // Load from List<Integer>
+    public static void loadProgram(Memory memory, List<Integer> program) {
+        int i = 0;
+        for (int instruction : program) {
+            String formatted = String.format("%04d", instruction);
+            memory.addItem(i++, formatted);
         }
     }
-
-    public static void main(String ...args) {
-        if (args.length == 0) {
-            System.out.println("Please provide a file name.");
-            return;
-        } else if (args.length == 1)
-            new Loader(args[0], "-d");
-        else 
-            new Loader(args[0], args[1]);
+    
+    // Load from List<String> (for use with Compiler output)
+    public static void loadProgramFromStrings(Memory memory, List<String> program) {
+        int i = 0;
+        for (String instruction : program) {
+            memory.addItem(i++, instruction);
+        }
+    }
+    
+    // Load from machine code file (handles comments and gets start address)
+    public static int loadProgramFromFile(Memory memory, String filename) {
+        int startAddress = 0;
+        boolean foundInstructions = false;
+        
+        try (BufferedReader reader = new BufferedReader(new FileReader(filename))) {
+            String line;
+            int address = 0;
+            
+            while ((line = reader.readLine()) != null) {
+                String trimmed = line.trim();
+                
+                // Skip empty lines
+                if (trimmed.isEmpty())
+                    continue;
+                
+                // Check for instruction start marker
+                if (trimmed.startsWith("// Instructions")) {
+                    foundInstructions = true;
+                    startAddress = address;
+                    continue;
+                }
+                
+                // Skip comment lines
+                if (trimmed.startsWith("//"))
+                    continue;
+                
+                // Remove inline comments and extract instruction
+                String instruction = trimmed.split("//")[0].trim();
+                
+                if (!instruction.isEmpty()) {
+                    memory.addItem(address++, instruction);
+                }
+            }
+        } catch (IOException e) {
+            System.out.println("Error loading program: " + e.getMessage());
+        }
+        
+        return startAddress;
     }
 }
